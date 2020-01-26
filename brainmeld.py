@@ -2,30 +2,31 @@ import twint
 import random
 
 def followingDis(source, target, num = 100):
-    if source is not None:
-        s = twint.Config()
-        s.Hide_output = True
-        s.Limit = 25
-        s.Username = source
-        s.Store_object = True
-        twint.run.Following(s)
-        sFollowing = set([u.username for u in twint.output.users_list])
-    else:
-        sFollowing = set()
-    print(sFollowing)
+    sou_lim = 25
+    sFollowing, tFollowing = set(), set()
+
+    s = twint.Config()
+    s.Hide_output = True
+    s.Limit = sou_lim
+    s.Username = source
+    s.Store_object = True
+    twint.run.Following(s)
+    sFollowing = set(twint.output.follows_list)
+
     t = twint.Config()
     t.Hide_output = True
-    t.Limit = 25
+    t.Limit = sou_lim
     t.Username = target
     t.Store_object = True
     twint.run.Following(t)
-    tFollowing = set([u.username for u in twint.output.users_list])
-    ##optional lessening of random sample
+    tFollowing = set(twint.output.follows_list)
+
+    #optional lessening of random sample
     if len(tFollowing) <= num:
         return target
     else:
         ## go over edge case
-        tFollowing = random.sample(source, 1000)    
+        tFollowing = random.sample(tFollowing, sou_lim)    
     i = set()
     o = set()
     for x in tFollowing:
@@ -33,11 +34,11 @@ def followingDis(source, target, num = 100):
             i.add(x)
         else: 
             o.add(x)
-
+    print('followingDis succeeded')
     if len(o) <= num:
         num -= len(o)
         ## make sure adding sets really is union and sort works with keys
-        return o.union(random_top(num, sorted(weight(sFollowing, i))))
+        return o.union(random_top(num, weight(sFollowing, i)))
     return random.sample(o, num)
 
 
@@ -45,38 +46,43 @@ def random_top(num, d):
     ret = set()
     j = 0
     t = True
-    for y, z in d.items():
+    print(d)
+    nummer = num
+    for k, v in d.items():
         if num >= 0:
-            ret.add(y)
-            d.pop(y)
-            num +=  -1
-            j = z
-        elif j is z:
-            ret.add(y)
-            d.pop(y)
+            ret.add(k)
+            num -= 1
+            j = v
+
+        elif j == v:
+            ret.add(k)
             t = False
         else:
             break
     if not t:
-        return random.sample(ret, num)
+        return random.sample(ret, nummer)
+
     return ret
 
-def weight(s1, s2): ##returns ordered list
+def weight(sFollowing, in_set): ##returns ordered list
     ret = dict()
-    for x in s2:
+    sou_lim = 25
+    print(sFollowing)
+    for x in in_set:
         i = 0
         t = twint.Config()
-        t.Limit = 50
+        t.Limit = sou_lim
         t.Username = x
+        t.Hide_output = True
         t.Store_object = True
         twint.run.Following(t)
-        tfollowing = set([u.username for u in twint.output.users_list])
+        tfollowing = set(twint.output.follows_list)
+        # tfollowing = set(['n5','n7', 'n4'])
         for y in tfollowing:
-            if y in s1:
-                i+= 1
-                ret[x] = i
-    return sorted(ret.values())
+            if y in sFollowing:
+                i += 1
+        ret[x] = i
+    return {k: v for k, v in sorted(ret.items(), key=lambda item: item[1])}
 
 if __name__ == '__main__':
-    res = followingDis("BarackObama","realDonaldTrump")
-    print(res)
+    print(followingDis("BarackObama","KeltonMadden", 10))
