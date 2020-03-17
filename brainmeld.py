@@ -110,14 +110,14 @@ def probe(source, target):
     for j in target_probes: print(j)
 
 class probe_twitter:
-    def __init__(self, source, target):      
+    def __init__(self, source, target, sample_size):      
         self.followers = []
         chrome_options = Options()
         chrome_options.add_argument("--headless")
         self.driver = webdriver.Chrome(options=chrome_options)
-        self.driver.implicitly_wait(10)
-        self.followers = self.get_following(source, 240)
-        print(self.followers)
+        self.driver.implicitly_wait(3)
+        self.followers = self.get_following(source, sample_size)
+        # print(self.followers)
 
     def truncateNumFollowing(self, node, nfollowing):
         self.driver.get('https://twitter.com/' + node)
@@ -136,32 +136,35 @@ class probe_twitter:
             self.driver.find_element_by_css_selector('#react-root > div > div > div > header > div.css-1dbjc4n.r-yfoy6g.r-o4zss7.r-rull8r.r-qklmqi.r-1d2f490.r-1xcajam.r-zchlnj.r-ipm5af.r-1siec45.r-o7ynqc.r-axxi2z.r-136ojw6 > div.css-1dbjc4n.r-1jgb5lz.r-sb58tz.r-13qz1uu > div > div.css-1dbjc4n.r-18u37iz.r-16y2uox.r-1h3ijdo.r-58zi21 > div.css-1dbjc4n.r-1awozwy.r-1pz39u2.r-18u37iz.r-16y2uox > div:nth-child(1) > a > div > span > span').click()
             self.driver.find_element_by_css_selector("#react-root > div > div > div.css-1dbjc4n.r-1pi2tsx.r-13qz1uu.r-417010 > main > div > div > form > div > div:nth-child(6) > label > div.css-1dbjc4n.r-18u37iz.r-16y2uox.r-1wbh5a2.r-1udh08x > div > input").click() # Click Login
         except:
-            try:
-                print("2 :")
-                self.driver.find_element_by_css_selector('//*[@id="react-root"]/div/div/div[1]/div/div/div/div/div[2]/div[2]/div/div[2]/div/div[3]/a[1]/div').click()
-            except:
-                try:
-                    print("3 :")
-                    self.driver.find_element_by_xpath('//*[@id="react-root"]/div/div/div/header/div[2]/div[1]/div/div[2]/div[1]/div[1]/a/div/span/span').click()
-                except:
-                    pass
-        input_user = self.driver.find_element_by_xpath('//*[@id="react-root"]/div/div/div[1]/main/div/div/form/div/div[1]/label/div[2]/div/input')
+            pass
+        try:
+            print("2 :")
+            self.driver.find_element_by_css_selector('//*[@id="react-root"]/div/div/div[1]/div/div/div/div/div[2]/div[2]/div/div[2]/div/div[3]/a[1]/div').click()
+        except:
+            pass
+        try:
+            print("3 :")
+            self.driver.find_element_by_xpath('//*[@id="react-root"]/div/div/div/header/div[2]/div[1]/div/div[2]/div[1]/div[1]/a/div/span/span').click()
+        except:
+            pass
+        input_user = self.driver.find_element_by_xpath('//*[@id="react-root"]/div/div/div[2]/main/div/div/form/div/div[1]/label/div/div[2]/div/input')
         input_user.click()
         input_user.send_keys('julianplushenry@gmail.com') # send username
-        input_pass = self.driver.find_elements_by_xpath('//*[@id="react-root"]/div/div/div[1]/main/div/div/form/div/div[2]/label/div[2]/div/input')[0]
+        input_pass = self.driver.find_element_by_xpath('//*[@id="react-root"]/div/div/div[2]/main/div/div/form/div/div[2]/label/div/div[2]/div/input')
         input_pass.click()
         input_pass.send_keys('passPasspazz') # send pass
-        self.driver.find_elements_by_xpath('//*[@id="react-root"]/div/div/div[1]/main/div/div/form/div/div[3]/div/div/span/span')[0].click() # Do Login
+        login_btn = self.driver.find_element_by_xpath('//*[@id="react-root"]/div/div/div[2]/main/div/div/form/div/div[3]/div/div')
+        login_btn.click() # Do Login
 
     def get_following(self, node, nfollowing):
-        nfollowing = self.truncateNumFollowing(node, nfollowing)
-        # self.driver.get('https://twitter.com/' + node + '/following')
+        nfollowing = int(self.truncateNumFollowing(node, nfollowing))
         followers = set()
         pgdown_reveal = 7
         for _ in range((int)((nfollowing - 7)/pgdown_reveal)):
             time.sleep(.05)
             self.driver.find_element_by_tag_name('body').send_keys(Keys.PAGE_DOWN)
             for i in range(1, 17):
+                if len(followers) >= nfollowing: break
                 try:
                     followers.add(self.driver.find_element_by_css_selector('#react-root > div > div > div > main > div > div > div > div > div > div:nth-child(2) > section > div > div > div > div:nth-child('+ str(i) + ') > div > div > div > div.css-1dbjc4n.r-1iusvr4.r-16y2uox.r-5f2r5o > div > div.css-1dbjc4n.r-1wbh5a2.r-dnmrzs > a > div > div.css-1dbjc4n.r-18u37iz.r-1wbh5a2 > div > span').text)
                 except:
@@ -170,11 +173,12 @@ class probe_twitter:
 
         return followers
 
-    # def sel_probe(source, target):
-    #     pass
-    #react-root > div > div > div > main > div > div > div > div > div > div:nth-child(2) > section > div > div > div > div:nth-child(3) > div > div > div > div.css-1dbjc4n.r-1iusvr4.r-16y2uox.r-5f2r5o > div > div.css-1dbjc4n.r-1wbh5a2.r-dnmrzs > a > div > div.css-1dbjc4n.r-18u37iz.r-1wbh5a2 > div > span
+    
 if __name__ == '__main__':
     t0 = time.time()
-    probe_twitter('BarackObama', 'KeltonMadden')
+    pt = probe_twitter('realDonaldTrump', 'Mike_Pence', 200)
+    pt2 = probe_twitter('Mike_Pence', 'realDonaldTrump', 200)
+    print(pt.followers & pt2.followers)
+    # seeds = [rpt.followers[random.randint(0,240)] for _ in range(24)]
     t1 = time.time()
     print("WALLTIME IS " + str(t1-t0))
